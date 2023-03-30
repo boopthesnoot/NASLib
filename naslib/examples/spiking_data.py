@@ -39,12 +39,10 @@ class SpikingNumpyDataset(data.Dataset):
         return self.num_samples
 
     def load_spikes(self):
-        # from tqdm 
         for idx in range(self.num_samples):
             times = np.digitize(self.firing_times[idx], self.time_bins)
             units = self.units_fired[idx]
-            self.input[idx, times, units] = 1.
-        self.input = self.input.astype(np.float32)
+            self.input[idx, times, units] = 1
 
     def reduce_inp_dimensions(self, target_dim, axis):
         sample_ind = int(np.ceil(self.nb_units / target_dim))
@@ -307,4 +305,5 @@ def get_numpy_datasets(dataset_name, n_inp):
         )
         train_ds.append(ssc_train_ds)
         test_ds.append(ssc_test_ds)
-    return train_ds[0], test_ds[0]
+
+    return train_ds, test_ds
