@@ -25,7 +25,7 @@ class NasBenchASRSearchSpace(Graph):
     nas-bench-asr architectures.
     """
 
-    QUERYABLE = True
+    QUERYABLE = False
     OPTIMIZER_SCOPE = [
         'cells_stage_1',
         'cells_stage_2',
