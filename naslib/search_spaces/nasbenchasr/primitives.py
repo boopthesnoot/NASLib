@@ -12,7 +12,7 @@ def get_loss():
     def loss(output, output_len, targets, targets_len):
         output_trans = output.permute(1, 0, 2) # needed by the CTCLoss
         loss = F.ctc_loss(output_trans, targets, output_len, targets_len, reduction='none', zero_infinity=True)
-        loss /= output_len
+        loss = loss / output_len
         loss = loss.mean()
         return loss
 
@@ -54,7 +54,7 @@ class PadConvRelu(ASRPrimitive):
         x = self.pad(x)
         x = self.conv(x)
         x = self.relu(x)
-        x = torch.clamp_max_(x, 20)
+        x = torch.clamp(x, max=20)
         x = self.dropout(x)
         return x
 
@@ -88,7 +88,7 @@ class Linear(ASRPrimitive):
         x = x.permute(0,2,1)
         x = self.linear(x)
         x = self.relu(x)
-        x = torch.clamp_max_(x, 20)
+        x = torch.clamp(x, max=20)
         x = self.dropout(x)
         x = x.permute(0,2,1)
         return x
@@ -117,7 +117,7 @@ class Head(ASRPrimitive):
         self.layers = nn.ModuleList([
             nn.Dropout(dropout_rate),
             nn.LSTM(input_size=filters, hidden_size=500, batch_first=True, dropout=0.0),
-            nn.Linear(in_features=500, out_features=num_classes+1)
+            nn.Linear(in_features=500, out_features=num_classes)
         ])
 
     def forward(self, x, edge_data=None):

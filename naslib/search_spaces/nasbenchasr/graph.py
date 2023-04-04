@@ -43,12 +43,12 @@ class NasBenchASRSearchSpace(Graph):
 
         self.n_blocks = 4
         self.n_cells_per_block = [3, 4, 5, 6]
-        self.features = 80
+        self.features = 100
         self.filters = [600, 800, 1000, 1200]
         self.cnn_time_reduction_kernels = [8, 8, 8, 8]
         self.cnn_time_reduction_strides = [1, 1, 2, 2]
         self.scells_per_block = [3, 4, 5, 6]
-        self.num_classes = 48
+        self.num_classes = 20
         self.dropout_rate = 0.0
         self.use_norm = True
 

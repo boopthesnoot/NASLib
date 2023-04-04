@@ -8,6 +8,7 @@ import os
 import copy
 import torch
 import numpy as np
+from tqdm import tqdm
 
 from fvcore.common.checkpoint import PeriodicCheckpointer
 
@@ -16,6 +17,7 @@ from naslib.utils.vis import plot_architectural_weights
 
 from naslib import utils
 from naslib.utils.log import log_every_n_seconds, log_first_n
+
 
 from typing import Callable
 from .additional_primitives import DropPathWrapper

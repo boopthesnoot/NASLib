@@ -5,6 +5,7 @@ from pathlib import Path
 
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
+from naslib.utils.custom_dataset import get_numpy_datasets
 
 from .taskonomy_dataset import get_datasets
 from . import load_ops
@@ -142,6 +143,13 @@ def get_train_val_loaders(config, mode="train"):
 
         train_transform = cfg['train_transform_fn']
         valid_transform = cfg['val_transform_fn']
+
+    elif dataset == 'shd':
+        train_data, test_data = get_numpy_datasets("shd", n_inp=100)
+        train_data, val_data, test_data = train_data, None, test_data
+
+        train_transform = lambda x: x
+        valid_transform = lambda x: x
 
     else:
         # 3 things for datasets
