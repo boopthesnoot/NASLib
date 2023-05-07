@@ -62,6 +62,14 @@ class SpikingNumpyDataset(data.Dataset):
         self.input = reshaped
         self.output = np.tile(self.output, sample_ind)
         self.num_samples = reshaped.shape[0]
+        print("Input shape: ", self.input.shape, "Output shape: ", self.output.shape, "Number of samples: ", self.num_samples)
+
+        # cutting the input to 1000 samples
+        self.input = self.input[:100]
+        self.output = self.output[:100]
+        self.num_samples = self.input.shape[0]
+        # import sys
+        # sys.exit()
 
     def __getitem__(self, idx):
         inputs, outputs = self.__data_generation(idx)

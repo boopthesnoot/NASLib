@@ -50,7 +50,9 @@ class Trainer(object):
         self.lightweight_output = lightweight_output
 
         # preparations
-        self.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(f"cuda:{self.config.gpu}" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device(config.device)
+        # self.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
         # measuring stuff
         self.train_top1 = utils.AverageMeter()
@@ -198,15 +200,16 @@ class Trainer(object):
 
             self.periodic_checkpointer.step(e)
 
-            anytime_results = self.optimizer.test_statistics()
-            # if anytime_results:
+            anytime_results = self.optimizer.test_statistics(data_val).detach().cpu().tolist()
+            print("anytime_results", anytime_results, type(anytime_results))
+            if anytime_results:
                 # record anytime performance
-                # self.search_trajectory.arch_eval.append(anytime_results)
-                # log_every_n_seconds(
-                #     logging.INFO,
-                #     "Epoch {}, Anytime results: {}".format(e, anytime_results),
-                #     n=5,
-                # )
+                self.search_trajectory.arch_eval.append(anytime_results)
+                log_every_n_seconds(
+                    logging.INFO,
+                    "Epoch {}, Anytime results: {}".format(e, anytime_results),
+                    n=5,
+                )
 
             self._log_to_json()
 
@@ -361,7 +364,7 @@ class Trainer(object):
 
                 # train from scratch
                 epochs = self.config.evaluation.epochs
-                for e in range(start_epoch, epochs):
+                for e in tqdm(range(start_epoch, epochs)):
                     best_arch.train()
 
                     if torch.cuda.is_available():
@@ -388,6 +391,8 @@ class Trainer(object):
 
                         optim.zero_grad()
                         logits_train = best_arch(input_train)
+                        logits_train = logits_train.transpose(1, 2)
+                        logits_train = torch.mean(logits_train, dim=2)
                         train_loss = loss(logits_train, target_train)
                         if hasattr(
                             best_arch, "auxilary_logits"
@@ -428,6 +433,8 @@ class Trainer(object):
                             # just log the validation accuracy
                             with torch.no_grad():
                                 logits_valid = best_arch(input_valid)
+                                logits_valid = logits_valid.transpose(1, 2)
+                                logits_valid = torch.mean(logits_valid, dim=2)
                                 self._store_accuracies(
                                     logits_valid, target_valid, "val"
                                 )
@@ -437,13 +444,13 @@ class Trainer(object):
                     self._log_and_reset_accuracies(e)
 
             # Disable drop path
-            best_arch.update_edges(
-                update_func=lambda edge: edge.data.set(
-                    "op", edge.data.op.get_embedded_ops()
-                ),
-                scope=best_arch.OPTIMIZER_SCOPE,
-                private_edge_data=True,
-            )
+            # best_arch.update_edges(
+            #     update_func=lambda edge: edge.data.set(
+            #         "op", edge.data.op.get_embedded_ops()
+            #     ),
+            #     scope=best_arch.OPTIMIZER_SCOPE,
+            #     private_edge_data=True,
+            # )
 
             # measure final test accuracy
             top1 = utils.AverageMeter()
@@ -460,6 +467,8 @@ class Trainer(object):
 
                 with torch.no_grad():
                     logits = best_arch(input_test)
+                    logits = logits.transpose(1, 2)
+                    logits = torch.mean(logits, dim=2)
 
                     prec1, prec5 = utils.accuracy(logits, target_test, topk=(1, 5))
                     top1.update(prec1.data.item(), n)

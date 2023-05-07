@@ -64,7 +64,9 @@ class DARTSOptimizer(MetaOptimizer):
         self.grad_clip = self.config.search.grad_clip
 
         self.architectural_weights = torch.nn.ParameterList()
-        self.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+        # print(self.config)
+        self.device = torch.device(f"cuda:{self.config.gpu}" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 
         self.perturb_alphas = None
         self.epsilon = 0
@@ -154,7 +156,7 @@ class DARTSOptimizer(MetaOptimizer):
         input_train, target_train = data_train
         input_val, target_val = data_val
 
-        unrolled = False  # what it this?
+        unrolled = False  # what it this? 
 
         if unrolled:
             raise NotImplementedError()
@@ -220,15 +222,26 @@ class DARTSOptimizer(MetaOptimizer):
     def get_model_size(self):
         return count_parameters_in_MB(self.graph)
 
-    def test_statistics(self):
+    def test_statistics(self, data_val):
         # nb301 is not there but we use it anyways to generate the arch strings.
         # if self.graph.QUERYABLE:
-        try:
-            # record anytime performance
-            best_arch = self.get_final_architecture()
-            return best_arch.query(Metric.TEST_ACCURACY, self.dataset)
-        except:
-            return None
+        best_arch = self.get_final_architecture()
+        input_val, target_val = data_val
+            # Update architecture weights
+        logits_val = best_arch(input_val)
+        logits_val = logits_val.transpose(1, 2)  # Change logits_val shape to (64, 21, 25)
+        logits_val = torch.mean(logits_val, dim=2)
+        target_val = target_val.long()
+        val_loss = F.cross_entropy(logits_val, target_val)
+        return val_loss
+        # try:
+        #     # record anytime performance
+        #     best_arch = self.get_final_architecture()
+        #     return best_arch.query(Metric.TEST_ACCURACY, self.dataset)
+        # except Exception as e:
+        #     print(e)
+        #     logger.error("Failed to query the final architecture: {}".format(e))
+        #     return None
 
     def _step(
         self,

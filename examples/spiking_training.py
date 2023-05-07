@@ -1,3 +1,4 @@
+import logging
 import sys
 
 sys.path.append("..")
@@ -6,7 +7,7 @@ sys.path.append("..")
 # export PYTHONPATH=$PYTHONPATH:/path/to/naslib or export PYTHONPATH=$PYTHONPATH:$pwd
 
 from naslib.optimizers import DARTSOptimizer
-from naslib.search_spaces import NasBenchASRSearchSpace #NasBench301SearchSpace#NasBenchNLPSearchSpace
+from naslib.search_spaces import NasBenchSpikingASRSearchSpace #NasBenchASRSearchSpace #NasBench301SearchSpace#NasBenchNLPSearchSpace
 from naslib.utils import set_seed, setup_logger, get_config_from_args, create_exp_dir
 
 from naslib import utils
@@ -15,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 import torch
 
 
-search_space = NasBenchASRSearchSpace()  #NasBenchNLPSearchSpace()
+search_space = NasBenchSpikingASRSearchSpace()  #NasBenchNLPSearchSpace()
 
 config = utils.get_config_from_args()
 config.save_arch_weights = True
@@ -26,6 +27,10 @@ config.save = "{}/{}/{}/{}/{}".format(
 create_exp_dir(config.save)
 create_exp_dir(config.save + "/search")  # required for the checkpoints
 create_exp_dir(config.save + "/eval")
+
+logger = setup_logger(config.save + "/log.log")
+logger.setLevel(logging.INFO)  # default DEBUG is very verbose
+
 
 optimizer = DARTSOptimizer(config)
 optimizer.adapt_search_space(search_space)  

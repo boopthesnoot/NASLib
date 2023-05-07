@@ -25,8 +25,10 @@ def get_train_val_loaders(config, mode="train"):
     data = config.data
     dataset = config.dataset
     seed = config.search.seed
-    batch_size = config.batch_size if hasattr(
-        config, "batch_size") else config.search.batch_size
+    # batch_size = config.batch_size if hasattr(
+    #     config, "batch_size") else config.search.batch_size
+    batch_size = 16
+    print("batch_size", batch_size)
     train_portion = config.train_portion if hasattr(
         config, "train_portion") else config.search.train_portion
     config = config.search if mode == "train" else config.evaluation
@@ -145,7 +147,7 @@ def get_train_val_loaders(config, mode="train"):
         valid_transform = cfg['val_transform_fn']
 
     elif dataset == 'shd':
-        train_data, test_data = get_numpy_datasets("shd", n_inp=100)
+        train_data, test_data = get_numpy_datasets("shd", n_inp=350)
         train_data, val_data, test_data = train_data, None, test_data
 
         train_transform = lambda x: x
